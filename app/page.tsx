@@ -1,57 +1,62 @@
+// app/page.tsx
+// CW Academy トップページ - ログイン済みユーザー向け学習ポータル
+
 'use client';
 
 import Link from 'next/link';
 import {
-  Video, Image as ImageIcon, Scissors, GitBranch, Clapperboard, Briefcase,
-  BookOpen, ChevronRight, Play, Users, Lock, Star, Sparkles, Crown,
+  Play, BookOpen, Video, ArrowRight, Clock, Lock,
+  ChevronRight, Sparkles, Flame, Star, Scale, RefreshCw,
+  Globe, Shield, Brain, Image, Scissors, Clapperboard,
+  GitBranch, Building2, Mic, Bell, Trophy, MessageCircle,
 } from 'lucide-react';
-import { CATEGORIES, getTotalLessons } from '@/lib/categoryDefinitions';
-import { useAuth } from '@/components/AuthProvider';
-import { useEffect, useState } from 'react';
-import { createClient as createSSRClient } from '@/lib/supabase-client';
-import { createClient } from '@supabase/supabase-js';
-import type { LiveArchive, Creator } from '@/types';
+import {
+  CATEGORIES, SECTIONS, LIVE_CONTENTS,
+  getCategoriesBySection, getTotalLessons,
+  type Category, type SectionMeta, type LiveContent,
+} from '@/lib/categoryDefinitions';
+import NewsFeedSection from "@/components/NewsFeedSection";
 
-const ICON_MAP: Record<string, any> = {
-  Video, Image: ImageIcon, Scissors, GitBranch, Clapperboard, Briefcase,
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Scale: <Scale className="w-5 h-5" />,
+  RefreshCw: <RefreshCw className="w-5 h-5" />,
+  Globe: <Globe className="w-5 h-5" />,
+  Shield: <Shield className="w-5 h-5" />,
+  Brain: <Brain className="w-5 h-5" />,
+  Video: <Video className="w-5 h-5" />,
+  Image: <Image className="w-5 h-5" />,
+  Scissors: <Scissors className="w-5 h-5" />,
+  Clapperboard: <Clapperboard className="w-5 h-5" />,
+  GitBranch: <GitBranch className="w-5 h-5" />,
+  Building: <Building2 className="w-5 h-5" />,
 };
 
-type ArchiveWithCreator = LiveArchive & { creators: Creator };
-
-// ===== Category Card =====
-function CategoryCard({ category }: { category: typeof CATEGORIES[0] }) {
-  const Icon = ICON_MAP[category.icon] || BookOpen;
+function CategoryCard({ category }: { category: Category }) {
   const totalLessons = getTotalLessons(category);
-  const totalCourses = category.courses.length;
-
   return (
-    <Link
-      href={`/category/${category.slug}`}
-      target="_blank"
-      className="group block bg-white rounded-2xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all overflow-hidden no-underline"
-    >
+    <Link href={`/category/${category.slug}`} className="block bg-white rounded-xl border border-gray-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group">
       <div className="h-1.5" style={{ background: category.color }} />
       <div className="p-5">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${category.color}15` }}>
-            <Icon className="w-5 h-5" style={{ color: category.color }} />
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0" style={{ background: category.color }}>
+            {ICON_MAP[category.icon] || <BookOpen className="w-5 h-5" />}
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-[16px] font-bold text-gray-900 group-hover:text-gray-700 transition-colors m-0">{category.name}</h3>
-            <p className="text-[13px] text-gray-500 mt-0.5 line-clamp-2 m-0">{category.desc}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-[15px] text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">{category.name}</h3>
+            <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-2">{category.desc}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-[12px] text-gray-400 mt-3">
-          <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{totalCourses} コース</span>
+        <div className="flex items-center gap-4 text-[12px] text-gray-400 mb-3">
+          <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{category.courses.length} コース</span>
           <span className="flex items-center gap-1"><Play className="w-3.5 h-3.5" />{totalLessons} レッスン</span>
         </div>
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          {category.courses.slice(0, 3).map(course => (
-            <div key={course.id} className="flex items-center gap-2 py-1.5">
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
-              <span className="text-[13px] text-gray-600 truncate">{course.title}</span>
-              {course.tierTarget === 'tier4-5' && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 font-medium shrink-0">初心者OK</span>
+        <div className="space-y-1.5">
+          {category.courses.slice(0, 2).map(course => (
+            <div key={course.id} className="flex items-center gap-2 text-[13px]">
+              <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              <span className="text-gray-700 truncate">{course.title}</span>
+              {course.lessons.some(l => l.isFree) && (
+                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex-shrink-0">初心者OK</span>
               )}
             </div>
           ))}
@@ -61,219 +66,160 @@ function CategoryCard({ category }: { category: typeof CATEGORIES[0] }) {
   );
 }
 
-// ===== Archive Card =====
-function ArchiveCard({ archive, isSubscribed }: { archive: ArchiveWithCreator; isSubscribed: boolean }) {
-  const creator = archive.creators;
-  const canWatch = isSubscribed || archive.is_free;
-
+function LiveCard({ content }: { content: LiveContent }) {
+  const bgMap: Record<string, string> = { live: 'from-purple-900/90 to-indigo-900/90', archive: 'from-slate-800/90 to-slate-900/90', workshop: 'from-teal-900/90 to-cyan-900/90' };
+  const bg = bgMap[content.type] || 'from-slate-800/90 to-slate-900/90';
   return (
-    <div className={`group bg-white rounded-2xl border border-gray-200 hover:border-teal-200 hover:shadow-lg transition-all overflow-hidden ${!canWatch ? 'cursor-default' : 'cursor-pointer'}`}>
-      <div className="relative aspect-video bg-gray-900">
-        {archive.thumbnail_url ? (
-          <img src={archive.thumbnail_url} alt={archive.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-teal-900 to-gray-900 flex items-center justify-center">
-            <Video className="w-10 h-10 text-teal-400 opacity-50" />
+    <Link href={`/live/${content.id}`} className="block rounded-xl overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300">
+      <div className={`relative h-[180px] bg-gradient-to-br ${bg} flex items-center justify-center`}>
+        {content.isFree && <span className="absolute top-3 left-3 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded">FREE</span>}
+        {content.isPremium && <span className="absolute top-3 left-3 bg-gray-600/80 text-white text-[11px] font-medium px-2.5 py-0.5 rounded flex items-center gap-1"><Lock className="w-3 h-3" /> 有料会員限定</span>}
+        <Video className="w-10 h-10 text-white/40" />
+        {content.duration && <span className="absolute bottom-3 right-3 text-white/60 text-[12px] flex items-center gap-1"><Clock className="w-3 h-3" />{content.duration}分</span>}
+      </div>
+      <div className="bg-white p-4">
+        <h3 className="font-bold text-[14px] text-gray-900 leading-snug mb-1 line-clamp-2 group-hover:text-blue-600 transition-colors">{content.title}</h3>
+        {content.speaker && (
+          <div className="flex items-center gap-2 mt-2 text-[12px]">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">{content.speaker[0]}</div>
+            <span className="text-gray-600">{content.speaker}</span>
+            {content.speakerTier && <span className="text-orange-500 flex items-center gap-0.5"><Star className="w-3 h-3" fill="currentColor" /> {content.speakerTier}</span>}
           </div>
-        )}
-        {!canWatch && (
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center">
-              <Lock className="w-6 h-6 text-white/80 mx-auto mb-1" />
-              <span className="text-[11px] text-white/70">有料会員限定</span>
-            </div>
-          </div>
-        )}
-        {canWatch && (
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-              <Play className="w-5 h-5 text-gray-900 ml-0.5" />
-            </div>
-          </div>
-        )}
-        {archive.is_free && (
-          <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-teal-500 text-white font-bold">FREE</span>
-        )}
-        {archive.duration_min && (
-          <span className="absolute bottom-2 right-2 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">{archive.duration_min}分</span>
         )}
       </div>
-      <div className="p-4">
-        <h3 className="text-[14px] font-bold text-gray-900 line-clamp-2 m-0">{archive.title}</h3>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-            {creator?.name?.[0] || '?'}
-          </div>
-          <span className="text-[12px] text-gray-500">{creator?.name || '不明'}</span>
-          {creator?.tier === 1 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-amber-600"><Star className="w-3 h-3" />Top</span>
-          )}
-        </div>
-      </div>
-    </div>
+    </Link>
   );
 }
 
-// ===== Main Page =====
-export default function AcademyHome() {
-  const { user, profile } = useAuth();
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [archives, setArchives] = useState<ArchiveWithCreator[]>([]);
-  const [loading, setLoading] = useState(true);
+function SectionBlock({ section, children }: { section: SectionMeta; children: React.ReactNode }) {
+  const iconMap: Record<string, React.ReactNode> = {
+    theory: <BookOpen className="w-5 h-5" style={{ color: section.tagColor }} />,
+    practice: <Clapperboard className="w-5 h-5" style={{ color: section.tagColor }} />,
+    applied: <Sparkles className="w-5 h-5" style={{ color: section.tagColor }} />,
+  };
+  return (
+    <section className="mb-12">
+      <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-200">
+        {iconMap[section.type]}
+        <div>
+          <h2 className="text-[20px] font-bold text-gray-900">{section.title} <span className="text-gray-400 font-normal text-[14px]">— {section.titleEn}</span></h2>
+          <p className="text-[13px] text-gray-500 mt-0.5">{section.desc}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-        const { data } = await supabase
-          .from('live_archives')
-          .select('*, creators(*)')
-          .eq('is_published', true)
-          .order('streamed_at', { ascending: false })
-          .limit(3);
-        setArchives((data as ArchiveWithCreator[]) || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+const APPLIED_ITEMS = [
+  { icon: <Mic className="w-5 h-5" />, label: '月2回', title: 'ゲスト講師ライブ配信', desc: 'トップクリエイターが制作過程をリアルタイムで実演。Q&A付き。アーカイブ視聴可能。' },
+  { icon: <Bell className="w-5 h-5" />, label: '毎週更新', title: '最新ツール速報', desc: 'KLING AI / Hailuo / ComfyUI等の新機能を5分で把握。プロが「使える/使えない」を検証。' },
+  { icon: <Trophy className="w-5 h-5" />, label: 'Awards連動', title: '入賞作品 制作過程解説', desc: 'Kuriemi Awards入賞作品のメイキング。ツール・プロンプト・ワークフロー全公開。' },
+  { icon: <MessageCircle className="w-5 h-5" />, label: '月1回', title: 'Q&A・作品添削会', desc: 'あなたの作品を講師がリアルタイムレビュー。改善ポイントを具体的にフィードバック。' },
+];
 
-  useEffect(() => {
-    if (!user) return;
-    const checkSub = async () => {
-      const supabase = createSSRClient();
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .limit(1);
-      setIsSubscribed((data?.length ?? 0) > 0);
-    };
-    checkSub();
-  }, [user]);
+export default function HomePage() {
+  const theorySection = SECTIONS.find(s => s.type === 'theory')!;
+  const practiceSection = SECTIONS.find(s => s.type === 'practice')!;
+  const appliedSection = SECTIONS.find(s => s.type === 'applied')!;
+  const theoryCats = getCategoriesBySection('theory');
+  const practiceCats = getCategoriesBySection('practice');
+  const liveContents = LIVE_CONTENTS.filter(l => ['live', 'archive', 'workshop'].includes(l.type)).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 no-underline">
-            <div className="w-9 h-9 bg-gradient-to-br from-red-600 to-red-500 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-[15px] text-gray-900">CW Academy</span>
-              <span className="text-[11px] text-gray-400 ml-1.5">by AiHUB</span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/subscription" className="hidden sm:flex items-center gap-1 px-3 py-1.5 text-[12px] font-bold text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition no-underline">
-              <Crown className="w-3.5 h-3.5" />プラン
-            </Link>
-            {user ? (
-              <Link href="/mypage" className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 rounded-lg transition no-underline">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold">
-                  {profile?.display_name?.[0]?.toUpperCase() || 'U'}
-                </div>
-                <span className="text-[14px] font-medium text-gray-700 hidden sm:block">{profile?.display_name || 'マイページ'}</span>
-              </Link>
-            ) : (
-              <Link href="/auth/login" className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800 transition no-underline">
-                ログイン
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-[28px] sm:text-[36px] font-extrabold leading-tight m-0">
-            AIクリエイティブを、<span className="text-red-400">体系的に</span>学ぶ
-          </h1>
-          <p className="text-[15px] text-gray-300 mt-3 max-w-[520px] mx-auto leading-relaxed">
-            動画制作・画像生成・編集・演出・ビジネス。AIクリエイターに必要なスキルを、カテゴリ別に基礎から実践まで。
-          </p>
-          <div className="flex items-center justify-center gap-5 mt-5 text-[13px] text-gray-400">
-            <span className="flex items-center gap-1.5"><Play className="w-4 h-4" />{CATEGORIES.reduce((sum, c) => sum + getTotalLessons(c), 0)}+ レッスン</span>
-            <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4" />{CATEGORIES.reduce((sum, c) => sum + c.courses.length, 0)} コース</span>
-            <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />Tier 5→3 対応</span>
-          </div>
-        </div>
+      {/* HERO — copy + subtext only */}
+      <section className="bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white text-center py-10 px-4">
+        <h1 className="text-[24px] sm:text-[32px] font-black tracking-tight leading-tight mb-3">
+          AIクリエイティブを、<span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">体系的に</span>学ぶ。<br />世界の<span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">最先端の</span>AIクリエーター情報を知る。
+        </h1>
+        <p className="text-[14px] text-gray-400 max-w-lg mx-auto leading-relaxed">
+          動画制作・画像生成・編集・演出・ビジネス。AIクリエイターに必要なスキルを、カテゴリ別に基礎から実践まで。
+        </p>
       </section>
 
-      {/* ===== Creator Live Preview ===== */}
+      {/* CREATOR LIVE */}
       <section className="max-w-6xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-teal-600" />
-            <h2 className="text-[20px] font-bold text-gray-900 m-0">Creator Live — トップクリエイターの制作現場</h2>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded-2xl h-52 animate-pulse" />)}
-          </div>
-        ) : archives.length === 0 ? (
-          <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl border border-teal-100 p-8 text-center">
-            <Video className="w-10 h-10 text-teal-400 mx-auto mb-3" />
-            <h3 className="text-[16px] font-bold text-gray-800 m-0">近日公開</h3>
-            <p className="text-[13px] text-gray-500 mt-2">WAIFFファイナリスト級のトップクリエイターが、制作プロセスをライブ配信。</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {archives.map(a => <ArchiveCard key={a.id} archive={a} isSubscribed={isSubscribed} />)}
-          </div>
-        )}
-
-        {/* もっと見る button + subscription CTA */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link
-            href="/live"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white text-[14px] font-bold rounded-xl hover:bg-teal-700 shadow-md hover:shadow-lg transition-all no-underline"
-          >
-            <Video className="w-4 h-4" />
-            アーカイブ・配信予定をすべて見る
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-
-          {!isSubscribed && (
-            <Link
-              href="/subscription"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[14px] font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 shadow-md hover:shadow-lg transition-all no-underline"
-            >
-              <Crown className="w-4 h-4 text-white" />
-              有料会員になる — 初月無料
-              <ChevronRight className="w-4 h-4 text-white/80" />
-            </Link>
-          )}
-        </div>
-      </section>
-
-      {/* Divider */}
-      <div className="max-w-6xl mx-auto px-4"><div className="border-t border-gray-200" /></div>
-
-      {/* ===== Category Grid ===== */}
-      <section className="max-w-6xl mx-auto px-4 py-10">
-        <h2 className="text-[20px] font-bold text-gray-900 mb-6">📚 カテゴリから学ぶ</h2>
+        <h2 className="text-[18px] font-bold text-gray-900 flex items-center gap-2 mb-5">
+          <Sparkles className="w-5 h-5 text-purple-500" />
+          Creator Live — トップクリエイターの制作現場
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CATEGORIES.map(cat => (<CategoryCard key={cat.id} category={cat} />))}
+          {liveContents.map(c => <LiveCard key={c.id} content={c} />)}
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
+          <Link href="/live" className="inline-flex items-center gap-2 bg-emerald-500 text-white font-semibold text-[14px] px-5 py-2.5 rounded-lg hover:bg-emerald-600 transition-colors">
+            <Video className="w-4 h-4" />アーカイブ・配信予定をすべて見る<ArrowRight className="w-4 h-4" />
+          </Link>
+          <a href="/pricing" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-orange-500 text-white font-semibold text-[14px] px-5 py-2.5 rounded-lg hover:bg-orange-600 transition-colors">
+            <Star className="w-4 h-4" />有料会員になる — 初月無料<ArrowRight className="w-4 h-4" />
+          </a>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8 px-4 mt-4">
-        <div className="max-w-6xl mx-auto text-center text-[13px] text-gray-400">
-          &copy; 2026 Creators&apos; Wonderland (AiHUB Inc.) — CW Academy
+      <div className="border-t border-gray-200" />
+
+      {/* 注目・新着 */}
+      <section className="max-w-6xl mx-auto px-4 py-8">
+        <h2 className="text-[18px] font-bold text-gray-900 flex items-center gap-2 mb-5">
+          <Flame className="w-5 h-5 text-orange-500" />注目・新着コンテンツ
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-2"><span className="text-[10px] font-bold text-white bg-blue-500 px-2 py-0.5 rounded">NEW</span><span className="text-[11px] text-gray-400">2026.03.25</span></div>
+            <h3 className="font-bold text-[14px] text-gray-900 mb-1">新コース「AI制作ワークフロー実践」公開</h3>
+            <p className="text-[12px] text-gray-500">DX vs AIの違い、PoC設計、アニメ制作フローへのAI導入を8レッスンで体系的に学ぶ</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-2"><span className="text-[10px] font-bold text-white bg-purple-500 px-2 py-0.5 rounded">AWARDS</span></div>
+            <h3 className="font-bold text-[14px] text-gray-900 mb-1">Kuriemi Awards 入賞作品の制作過程を完全解説</h3>
+            <p className="text-[12px] text-gray-500">グランプリ作品はどう作られた？使用ツール・プロンプト・ワークフローを公開</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-2"><span className="text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded">UPDATE</span></div>
+            <h3 className="font-bold text-[14px] text-gray-900 mb-1">KLING AI v2.0 速報: 何が変わった？</h3>
+            <p className="text-[12px] text-gray-500">プロが検証した新機能の「使える/使えない」を5分で把握</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 生成AI最新ニュース */}
+      <NewsFeedSection />
+
+      <div className="border-t border-gray-200" />
+
+      {/* 3 SECTIONS */}
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        <SectionBlock section={theorySection}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{theoryCats.map(c => <CategoryCard key={c.id} category={c} />)}</div>
+        </SectionBlock>
+        <SectionBlock section={practiceSection}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{practiceCats.map(c => <CategoryCard key={c.id} category={c} />)}</div>
+        </SectionBlock>
+        <SectionBlock section={appliedSection}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {APPLIED_ITEMS.map((item, i) => (
+              <div key={i} className="bg-white rounded-xl border border-amber-200 p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">{item.icon}</div>
+                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{item.label}</span>
+                </div>
+                <h3 className="font-bold text-[14px] text-gray-900 mb-1">{item.title}</h3>
+                <p className="text-[12px] text-gray-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </SectionBlock>
+      </div>
+
+      <footer className="border-t border-gray-200 bg-white py-6 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="text-[12px] text-gray-400">© 2026 Creators&apos; Wonderland (AiHUB Inc.) — CW Academy</span>
+          <div className="flex gap-4 text-[12px] text-gray-400">
+            <a href="/pricing" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">料金プラン</a>
+            <Link href="/terms" className="hover:text-gray-600">利用規約</Link>
+            <Link href="/privacy" className="hover:text-gray-600">プライバシー</Link>
+          </div>
         </div>
       </footer>
     </div>

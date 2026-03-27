@@ -55,30 +55,26 @@ function CourseSidebar({
 
         return (
           <div key={course.id}>
+            {/* Course header */}
             <button
               onClick={() => {
                 setExpandedCourse(isExp ? '' : course.id);
                 onCourseClick(course.id);
               }}
-              className="w-full text-left flex items-center gap-2.5 py-3 px-4 border-none cursor-pointer transition-all bg-transparent"
-              style={{
-                borderLeft: isExp ? `3px solid ${category.color}` : '3px solid transparent',
-              }}
+              className={`w-full flex items-center gap-2.5 px-4 py-3 text-left transition-colors border-none cursor-pointer border-b border-gray-100 ${
+                selectedCourseId === course.id ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
+              }`}
             >
               <div className="flex-1 min-w-0">
-                <div className="text-[14px] font-semibold text-gray-700 truncate">{course.title}</div>
-                <div className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-2">
-                  <span>{course.lessons.length}レッスン</span>
-                  {watchedCount > 0 && (
-                    <span className="text-emerald-500">{watchedCount}/{course.lessons.length} 完了</span>
-                  )}
+                <div className="text-[13px] font-semibold text-gray-800 truncate">{course.title}</div>
+                <div className="text-[11px] text-gray-400 mt-0.5">
+                  {watchedCount}/{course.lessons.length} レッスン
                 </div>
               </div>
-              <span className="text-gray-400">
-                {isExp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </span>
+              {isExp ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />}
             </button>
 
+            {/* Lesson list (expanded) */}
             {isExp && course.lessons.map((lesson, i) => {
               const isActive = selectedLessonId === lesson.id;
               const isWatched = watchedLessonIds.includes(lesson.id);
@@ -86,26 +82,24 @@ function CourseSidebar({
                 <button
                   key={lesson.id}
                   onClick={() => onLessonClick(course.id, lesson.id)}
-                  className="w-full text-left flex items-center gap-2 py-2.5 pr-4 border-none cursor-pointer transition-all bg-transparent"
-                  style={{ paddingLeft: 40, background: isActive ? `${category.color}10` : 'transparent' }}
+                  className={`w-full flex items-center gap-2.5 px-4 py-2 pl-6 text-left text-[13px] transition-colors border-none cursor-pointer ${
+                    isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  }`}
                 >
                   <span
-                    className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
-                    style={{
-                      background: isWatched ? '#10b981' : isActive ? category.color : '#e5e7eb',
-                      color: isWatched || isActive ? '#fff' : '#9ca3af',
-                    }}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 ${
+                      isWatched
+                        ? 'bg-emerald-500 text-white'
+                        : isActive
+                          ? 'bg-blue-100 text-blue-600 font-bold'
+                          : 'border border-gray-300 text-gray-400'
+                    }`}
                   >
                     {isWatched ? <Check className="w-3 h-3" /> : i + 1}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[13px] truncate block" style={{ color: isActive ? category.color : '#374151', fontWeight: isActive ? 600 : 400 }}>
-                      {lesson.title}
-                    </span>
-                    {lesson.duration && <span className="text-[11px] text-gray-400">{formatDuration(lesson.duration)}</span>}
-                  </div>
-                  {lesson.isFree && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-50 text-green-600 font-bold shrink-0">無料</span>
+                  <span className="truncate flex-1">{lesson.title}</span>
+                  {lesson.duration && (
+                    <span className="text-[11px] text-gray-400 shrink-0">{formatDuration(lesson.duration)}</span>
                   )}
                 </button>
               );
@@ -120,55 +114,60 @@ function CourseSidebar({
 function PlaylistSidebar({
   course, currentLessonIdx, onLessonClick, watchedLessonIds, color,
 }: {
-  course: Course; currentLessonIdx: number; onLessonClick: (i: number) => void;
-  watchedLessonIds: string[]; color: string;
+  course: Course;
+  currentLessonIdx: number;
+  onLessonClick: (idx: number) => void;
+  watchedLessonIds: string[];
+  color: string;
 }) {
   return (
     <div
-      className="w-[360px] border-l border-gray-200 bg-white overflow-hidden shrink-0 hidden xl:flex flex-col"
+      className="w-[300px] bg-white border-l border-gray-200 overflow-y-auto shrink-0 hidden xl:flex flex-col"
       style={{ height: 'calc(100vh - 56px)', position: 'sticky', top: 56 }}
     >
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="text-[14px] font-bold text-gray-700 flex items-center gap-1.5">
-          <ListVideo className="w-4 h-4 text-gray-400" />
-          {course.title}
-        </div>
-        <div className="mt-2 flex gap-[3px]">
-          {course.lessons.map((l, i) => (
-            <div key={l.id} className="flex-1 h-[4px] rounded-sm transition-all" style={{
-              background: watchedLessonIds.includes(l.id) ? '#10b981' : i === currentLessonIdx ? color : '#e5e7eb',
-            }} />
-          ))}
-        </div>
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+        <ListVideo className="w-4 h-4 text-gray-500" />
+        <span className="text-[13px] font-semibold text-gray-700">プレイリスト</span>
+        <span className="text-[11px] text-gray-400 ml-auto">
+          {currentLessonIdx + 1} / {course.lessons.length}
+        </span>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {course.lessons.map((lesson, i) => {
-          const isActive = i === currentLessonIdx;
+      <div className="flex-1">
+        {course.lessons.map((lesson, idx) => {
+          const isCurrent = idx === currentLessonIdx;
           const isWatched = watchedLessonIds.includes(lesson.id);
           return (
             <button
               key={lesson.id}
-              onClick={() => onLessonClick(i)}
-              className="w-full flex gap-3 py-3 px-4 border-none cursor-pointer text-left transition-all bg-transparent"
-              style={{ borderLeft: isActive ? `3px solid ${color}` : '3px solid transparent' }}
+              onClick={() => onLessonClick(idx)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-none cursor-pointer ${
+                isCurrent ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+              }`}
             >
               <span
-                className="w-[24px] h-[24px] rounded-full flex items-center justify-center text-[12px] font-semibold shrink-0 mt-0.5"
-                style={{ background: isWatched ? '#10b981' : isActive ? color : '#e5e7eb', color: isWatched || isActive ? '#fff' : '#9ca3af' }}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                  isWatched
+                    ? 'bg-emerald-500 text-white'
+                    : isCurrent
+                      ? 'text-white'
+                      : 'border border-gray-300 text-gray-400'
+                }`}
+                style={isCurrent && !isWatched ? { background: color } : undefined}
               >
-                {isWatched ? <Check className="w-3 h-3" /> : i + 1}
+                {isWatched ? <Check className="w-3 h-3" /> : idx + 1}
               </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[14px] leading-snug" style={{ fontWeight: isActive ? 700 : 500, color: isActive ? color : '#374151' }}>
+              <div className="flex-1 min-w-0">
+                <div className={`text-[13px] truncate ${isCurrent ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
                   {lesson.title}
                 </div>
-                <div className="text-[12px] text-gray-500 mt-0.5">{lesson.desc}</div>
-                <div className="flex items-center gap-2 mt-1">
-                  {isWatched && <span className="text-[11px] text-emerald-500 font-semibold flex items-center gap-0.5"><Check className="w-3 h-3" /> 完了</span>}
-                  {lesson.duration && <span className="text-[11px] text-gray-400 flex items-center gap-0.5"><Clock className="w-3 h-3" /> {formatDuration(lesson.duration)}</span>}
-                  {lesson.isFree && <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-50 text-green-600 font-medium">無料</span>}
-                </div>
+                {lesson.duration && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Clock className="w-3 h-3 text-gray-400" />
+                    <span className="text-[11px] text-gray-400">{formatDuration(lesson.duration)}</span>
+                  </div>
+                )}
               </div>
+              {isCurrent && <Play className="w-4 h-4 shrink-0" style={{ color }} />}
             </button>
           );
         })}
@@ -248,16 +247,12 @@ export default function CategoryLearnPage() {
             <span className="font-bold text-[14px] text-gray-900 hidden sm:block">CW Academy</span>
           </Link>
           {currentLesson && (
-            <button
-              onClick={markComplete}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition border-none cursor-pointer ${
-                watchedLessonIds.includes(currentLesson.id)
-                  ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Check className="w-4 h-4" />
-              {watchedLessonIds.includes(currentLesson.id) ? '完了済み' : '完了にする'}
-            </button>
+            <div className="flex-1 mx-4 min-w-0 hidden sm:block">
+              <div className="text-[13px] font-medium text-gray-800 truncate">{currentLesson.title}</div>
+              <div className="text-[11px] text-gray-400">
+                {currentCourse?.title} · レッスン {currentLessonIdx + 1}/{currentCourse?.lessons.length}
+              </div>
+            </div>
           )}
         </div>
       </header>

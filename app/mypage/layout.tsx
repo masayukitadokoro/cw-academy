@@ -26,28 +26,6 @@ export default function MypageLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 h-14">
-        <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 no-underline">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-500 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-[14px] text-gray-900">CW Academy</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-gray-500 hover:text-gray-700 no-underline flex items-center gap-1">
-              <Home className="w-4 h-4" /> トップ
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold">
-                {profile?.display_name?.[0]?.toUpperCase() || 'U'}
-              </div>
-              <span className="text-[13px] font-medium text-gray-700 hidden sm:block">{profile?.display_name || 'ユーザー'}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-6xl mx-auto px-4 py-6 flex gap-6">
         <nav className="w-[220px] shrink-0 hidden md:block">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
