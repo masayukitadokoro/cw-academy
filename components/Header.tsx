@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, User, Crown } from "lucide-react";
+import { BookOpen, User, Crown, Award } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
+  const pathname = usePathname();
+  const isInDirectorShot = pathname?.startsWith("/role/director-shot") ?? false;
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -15,6 +18,13 @@ export default function Header() {
           <span className="text-[12px] text-gray-400 hidden sm:inline">by AiHUB</span>
         </Link>
         <div className="flex items-center gap-3">
+          {!isInDirectorShot && (
+            <Link href="/role/director-shot/learning"
+              className="inline-flex items-center gap-1.5 bg-[#993C1D] hover:bg-[#712B13] text-white text-[13px] font-medium px-3 py-1.5 rounded-lg transition-colors relative">
+              <Award className="w-3.5 h-3.5" /> 認定取得プログラム
+              <span className="absolute -top-1.5 -right-1.5 bg-[#B8893E] text-white text-[8px] font-bold px-1.5 py-0.5 rounded">NEW</span>
+            </Link>
+          )}
           <a href="/pricing" target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 border border-gray-300 text-gray-700 text-[13px] font-medium px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
             <Crown className="w-3.5 h-3.5" /> プラン
